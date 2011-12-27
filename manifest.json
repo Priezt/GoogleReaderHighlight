@@ -1,0 +1,28 @@
+﻿{
+	"name": "Highlight for GoogleReader",
+	"version": "1.2",
+	"description": "Highlight keywords of titles in google reader",
+	"permissions": [
+		"http://www.google.com/reader/*",
+		"https://www.google.com/reader/*"
+	],
+	"icons": {
+		"16": "img/16.png",
+		"48": "img/48.png",
+		"128": "img/128.png"
+	},
+	"content_scripts": [
+		{
+			"matches": [
+				"http://www.google.com/reader/*",
+				"https://www.google.com/reader/*"
+			],
+			"js": [
+				"lib/jquery-1.6.1.min.js",
+				"lib/ztoolkit.js",
+				"css_inject.js",
+				"content_main.js"
+			]
+		}
+	]
+}
