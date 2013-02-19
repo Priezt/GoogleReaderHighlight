@@ -46,6 +46,56 @@ function update_keyword_list(){
 	$("#highlight_keyword_panel").hide();
 }
 
+function save_keyword_list_to_cloud(){
+	$.post("http://priezttest.appspot.com/", {
+		k: 'google_reader_highlight_cloud',
+		v: JSON.stringify($("#keyword_list_text").val())
+	}, function(data){
+		var result = JSON.parse(data);
+		console.log(result);
+		if(result.error){
+			console.log('not login');
+			console.log('login url: ' + result.login_url);
+			console.log('login');
+			$.post("http://priezttest.appspot.com/", {
+				k: 'google_reader_highlight_cloud',
+				v: JSON.stringify($("#keyword_list_text").val())
+			}, function(data){
+				console.log('save complete');
+				$("#grh_msg").text("Done");
+			});
+		}else{
+			console.log('save complete');
+			$("#grh_msg").text("Done");
+		}
+	});
+}
+
+function load_keyword_list_from_cloud(){
+	$.get("http://priezttest.appspot.com/?k=google_reader_highlight_cloud", function(data){
+		var result = JSON.parse(data);
+		if(result.error){
+			console.log('not login');
+			console.log('login url: ' + result.login_url);
+			$.get(result.login_url, function(data){
+				console.log('login');
+				$.get("http://priezttest.appspot.com/?k=google_reader_highlight_cloud", function(data){
+					var result = JSON.parse(data);
+					console.log(result);
+					$("#keyword_list_text").val(JSON.parse(result.data));
+					console.log('load complete');
+					$("#grh_msg").text("Done");
+				});
+			});
+		}else{
+			console.log(result);
+			$("#keyword_list_text").val(JSON.parse(result.data));
+			console.log('load complete');
+			$("#grh_msg").text("Done");
+		}
+	});
+}
+
 function inject_controller(){
 	console.log("inject controller");
 	$("div#search").append(
@@ -67,6 +117,7 @@ function inject_controller(){
 			.attr("src", $("div#entries-down img").attr("src"))
 		)
 		.click(function(){
+			$("#grh_msg").text("");
 			$("#highlight_keyword_panel").toggle();
 		})
 	);
@@ -83,8 +134,32 @@ function inject_controller(){
 				.addClass("jfk-button-primary")
 				.addClass("jfk-button")
 				.css("-webkit-user-select", "none")
-				.text("Update")
+				.text("Local Update")
 				.click(update_keyword_list)
+		)
+		.append(
+			$("<span></span>")
+				.addClass("jfk-button-primary")
+				.addClass("jfk-button")
+				.css("-webkit-user-select", "none")
+				.text("Cloud Save")
+				.click(save_keyword_list_to_cloud)
+		)
+		.append(
+			$("<span></span>")
+				.addClass("jfk-button-primary")
+				.addClass("jfk-button")
+				.css("-webkit-user-select", "none")
+				.text("Cloud Load")
+				.click(load_keyword_list_from_cloud)
+		)
+		.append(
+			$("<div>")
+				.attr("id", "grh_msg")
+				.css("display", "inline-block")
+				.css("font-weight", "bold")
+				.css("color", "#8C8")
+				.text("")
 		)
 		.hide()
 		.insertBefore($("div#main"));
@@ -100,7 +175,7 @@ function bind_events(){
 function render_entries(){
 	var unread_entries = $("div.entry").not(".read");
 	console.log("unread entries: " + unread_entries.size());
-	unread_entries.find(".entry-title").not(".highlight_processed").each(function(){
+	unread_entries.find("div.collapsed .entry-title").not(".highlight_processed").each(function(){
 		$(this).addClass("highlight_processed");
 		var text = $(this).text();
 		var html = render_html(text);
